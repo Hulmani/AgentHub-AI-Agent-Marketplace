@@ -15,3 +15,5 @@ __pycache__/
 agenthub.db
 *.sqlite3
 
+# Local environment secrets/config
+.env

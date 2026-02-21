@@ -4,4 +4,4 @@ sqlalchemy==2.0.43
 pydantic==2.11.7
 httpx==0.28.1
 requests==2.32.5
-
+psycopg2-binary>=2.9
