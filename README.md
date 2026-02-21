@@ -34,6 +34,10 @@
 └── requirements.txt
 ```
 
+## Python Version
+- Recommended: `Python 3.11`
+- Minimum supported: `Python 3.10+`
+
 ## Setup
 ```bash
 python3 -m venv .venv
@@ -54,6 +58,11 @@ export RATE_LIMIT_WINDOW_SECONDS="60"
 uvicorn agenthub.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+## Run with uv (recommended)
+```bash
+PYTHONPATH=. uv run --python 3.11 --with-requirements requirements.txt uvicorn agenthub.app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
 ## Start Demo Agents (3 terminals)
 ```bash
 uvicorn demo_agents.summarize_agent:app --host 0.0.0.0 --port 9001 --reload
@@ -66,6 +75,11 @@ uvicorn demo_agents.keyword_extract_agent:app --host 0.0.0.0 --port 9003 --reloa
 python planner_agent.py
 ```
 
+## Run Tests with uv
+```bash
+PYTHONPATH=. uv run --python 3.11 --with-requirements requirements.txt --with pytest pytest tests/test_agents.py -q
+```
+
 ## Core API Endpoints
 - `POST /agents/register`: register an agent.
 - `GET /agents/search`: query by `skill`, `max_price`, `min_score`, ranked by `reputation_score`, `price_per_call`, `avg_latency`.
@@ -76,4 +90,3 @@ All `/agents/*` endpoints require:
 ```http
 X-API-Key: dev-secret-key
 ```
-
