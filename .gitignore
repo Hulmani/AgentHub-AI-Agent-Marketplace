@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Python cache/bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+.pycache/
+
+# Test/tool caches
+.pytest_cache/
+.uv-cache/
+
+# Local runtime data
+agenthub.db
+*.sqlite3
+
