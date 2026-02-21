@@ -1,8 +1,8 @@
 from time import perf_counter
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -164,3 +164,16 @@ def report_result(payload: ReportResultRequest, db: Session = Depends(get_db)) -
     db.commit()
     db.refresh(agent)
     return agent
+
+
+@router.delete("/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_agent(agent_id: int, db: Session = Depends(get_db)) -> Response:
+    agent = db.get(Agent, agent_id)
+    if not agent:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found.")
+
+    # Delete related logs first to keep behavior consistent across DB backends.
+    db.execute(delete(CallLog).where(CallLog.agent_id == agent.id))
+    db.delete(agent)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

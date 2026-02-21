@@ -304,6 +304,45 @@ def test_report_result_updates_reputation(
     assert final_body["avg_latency"] == 0.0
 
 
+def test_delete_agent_success_removes_agent_and_logs(
+    client: TestClient,
+    auth_headers: dict[str, str],
+    db_setup: tuple[sessionmaker, Any],
+    sample_agent_payload: dict[str, Any],
+) -> None:
+    """Deleting an agent should remove the agent record and its call logs."""
+    registered = register_agent(client, auth_headers, sample_agent_payload)
+
+    # Create one call log via report endpoint before deletion.
+    report_response = client.post(
+        "/agents/report",
+        headers=auth_headers,
+        json={"agent_id": registered["id"], "success": True},
+    )
+    assert report_response.status_code == 200
+
+    delete_response = client.delete(f"/agents/{registered['id']}", headers=auth_headers)
+    assert delete_response.status_code == 204
+    assert delete_response.text == ""
+
+    db_session_factory, _ = db_setup
+    with db_session_factory() as db:
+        agent = db.get(Agent, registered["id"])
+        assert agent is None
+        logs = db.scalars(select(CallLog).where(CallLog.agent_id == registered["id"])).all()
+        assert logs == []
+
+
+def test_delete_agent_not_found_returns_404(
+    client: TestClient,
+    auth_headers: dict[str, str],
+) -> None:
+    """Deleting a missing agent id should return 404."""
+    response = client.delete("/agents/999999", headers=auth_headers)
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Agent not found."
+
+
 def test_authentication_missing_api_key_denied(
     client: TestClient,
     sample_agent_payload: dict[str, Any],

@@ -85,6 +85,7 @@ PYTHONPATH=. uv run --python 3.11 --with-requirements requirements.txt --with py
 - `GET /agents/search`: query by `skill`, `max_price`, `min_score`, ranked by `reputation_score`, `price_per_call`, `avg_latency`.
 - `POST /agents/call`: proxy call to target agent endpoint with timeout + logging + metric updates.
 - `POST /agents/report`: explicit success/failure feedback.
+- `DELETE /agents/{agent_id}`: delete an agent and its related call logs.
 
 All `/agents/*` endpoints require:
 ```http
