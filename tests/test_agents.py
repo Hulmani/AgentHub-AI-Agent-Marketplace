@@ -93,9 +93,20 @@ def client(
 
 def register_agent(client: TestClient, headers: dict[str, str], payload: dict[str, Any]) -> dict[str, Any]:
     """Helper for concise agent registration inside tests."""
-    response = client.post("/agents/register", headers=headers, json=payload)
+    response = client.post("/api/v1/agents/register", headers=headers, json=payload)
     assert response.status_code == 201
     return response.json()
+
+
+def test_health_endpoints_available(client: TestClient) -> None:
+    """Both operational and versioned health checks should return 200."""
+    operational = client.get("/health")
+    versioned = client.get("/api/v1/health")
+
+    assert operational.status_code == 200
+    assert operational.json() == {"status": "ok"}
+    assert versioned.status_code == 200
+    assert versioned.json() == {"status": "ok"}
 
 
 def test_register_agent_success(
@@ -104,7 +115,7 @@ def test_register_agent_success(
     sample_agent_payload: dict[str, Any],
 ) -> None:
     """Registering a valid agent should persist it with default metrics."""
-    response = client.post("/agents/register", headers=auth_headers, json=sample_agent_payload)
+    response = client.post("/api/v1/agents/register", headers=auth_headers, json=sample_agent_payload)
 
     assert response.status_code == 201
     body = response.json()
@@ -127,7 +138,7 @@ def test_register_agent_validation_error(
     invalid_payload = dict(sample_agent_payload)
     invalid_payload.pop("endpoint")
 
-    response = client.post("/agents/register", headers=auth_headers, json=invalid_payload)
+    response = client.post("/api/v1/agents/register", headers=auth_headers, json=invalid_payload)
     assert response.status_code == 422
 
 
@@ -182,7 +193,7 @@ def test_search_agents_filters_and_ranking(
         db.commit()
 
     response = client.get(
-        "/agents/search",
+        "/api/v1/agents/search",
         headers=auth_headers,
         params={"skill": "summarize_text", "max_price": 0.01, "min_score": 0.8},
     )
@@ -211,7 +222,7 @@ def test_call_agent_success_updates_metrics_and_logs(
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
 
     response = client.post(
-        "/agents/call",
+        "/api/v1/agents/call",
         headers=auth_headers,
         json={"agent_id": registered["id"], "payload": {"text": "hello world"}},
     )
@@ -252,7 +263,7 @@ def test_call_agent_timeout_failure_updates_metrics(
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
 
     response = client.post(
-        "/agents/call",
+        "/api/v1/agents/call",
         headers=auth_headers,
         json={"agent_id": registered["id"], "payload": {"text": "hello world"}},
     )
@@ -272,7 +283,7 @@ def test_call_agent_timeout_failure_updates_metrics(
 def test_call_agent_not_found_returns_404(client: TestClient, auth_headers: dict[str, str]) -> None:
     """Calling an unknown agent id should return 404."""
     response = client.post(
-        "/agents/call",
+        "/api/v1/agents/call",
         headers=auth_headers,
         json={"agent_id": 99999, "payload": {"text": "hello world"}},
     )
@@ -288,11 +299,11 @@ def test_report_result_updates_reputation(
     """Explicit reports should update total/success/failure counts and reputation ratio."""
     registered = register_agent(client, auth_headers, sample_agent_payload)
 
-    r1 = client.post("/agents/report", headers=auth_headers, json={"agent_id": registered["id"], "success": True})
+    r1 = client.post("/api/v1/agents/report", headers=auth_headers, json={"agent_id": registered["id"], "success": True})
     assert r1.status_code == 200
-    r2 = client.post("/agents/report", headers=auth_headers, json={"agent_id": registered["id"], "success": True})
+    r2 = client.post("/api/v1/agents/report", headers=auth_headers, json={"agent_id": registered["id"], "success": True})
     assert r2.status_code == 200
-    r3 = client.post("/agents/report", headers=auth_headers, json={"agent_id": registered["id"], "success": False})
+    r3 = client.post("/api/v1/agents/report", headers=auth_headers, json={"agent_id": registered["id"], "success": False})
     assert r3.status_code == 200
 
     final_body = r3.json()
@@ -315,13 +326,13 @@ def test_delete_agent_success_removes_agent_and_logs(
 
     # Create one call log via report endpoint before deletion.
     report_response = client.post(
-        "/agents/report",
+        "/api/v1/agents/report",
         headers=auth_headers,
         json={"agent_id": registered["id"], "success": True},
     )
     assert report_response.status_code == 200
 
-    delete_response = client.delete(f"/agents/{registered['id']}", headers=auth_headers)
+    delete_response = client.delete(f"/api/v1/agents/{registered['id']}", headers=auth_headers)
     assert delete_response.status_code == 204
     assert delete_response.text == ""
 
@@ -338,7 +349,7 @@ def test_delete_agent_not_found_returns_404(
     auth_headers: dict[str, str],
 ) -> None:
     """Deleting a missing agent id should return 404."""
-    response = client.delete("/agents/999999", headers=auth_headers)
+    response = client.delete("/api/v1/agents/999999", headers=auth_headers)
     assert response.status_code == 404
     assert response.json()["detail"] == "Agent not found."
 
@@ -348,7 +359,7 @@ def test_authentication_missing_api_key_denied(
     sample_agent_payload: dict[str, Any],
 ) -> None:
     """Protected endpoints should reject requests without API key."""
-    response = client.post("/agents/register", json=sample_agent_payload)
+    response = client.post("/api/v1/agents/register", json=sample_agent_payload)
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid or missing API key."
 
@@ -359,7 +370,7 @@ def test_authentication_invalid_api_key_denied(
 ) -> None:
     """Protected endpoints should reject incorrect API keys."""
     response = client.post(
-        "/agents/register",
+        "/api/v1/agents/register",
         headers={"X-API-Key": "wrong-key"},
         json=sample_agent_payload,
     )
@@ -379,13 +390,13 @@ def test_rate_limiting_returns_429(
     )
 
     # First two requests are within the allowed quota.
-    r1 = client.get("/agents/search", headers=auth_headers)
-    r2 = client.get("/agents/search", headers=auth_headers)
+    r1 = client.get("/api/v1/agents/search", headers=auth_headers)
+    r2 = client.get("/api/v1/agents/search", headers=auth_headers)
     assert r1.status_code == 200
     assert r2.status_code == 200
 
     # Third request should hit the limiter.
-    r3 = client.get("/agents/search", headers=auth_headers)
+    r3 = client.get("/api/v1/agents/search", headers=auth_headers)
     assert r3.status_code == 429
     assert r3.json()["detail"] == "Rate limit exceeded."
     assert "Retry-After" in r3.headers

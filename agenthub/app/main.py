@@ -1,28 +1,34 @@
 from pathlib import Path
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .database import Base, engine
 from .routers import agents
 
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
 app = FastAPI(
     title="AgentHub API",
     version="0.1.0",
     description="MVP Agent-to-Agent Marketplace API",
+    lifespan=lifespan,
 )
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+api_v1_router = APIRouter(prefix="/api/v1")
+api_v1_router.include_router(agents.router)
 
-
-@app.on_event("startup")
-def on_startup() -> None:
-    Base.metadata.create_all(bind=engine)
-
-
-@app.get("/health")
+@app.get("/health", include_in_schema=False)
+@api_v1_router.get("/health", tags=["health"])
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
@@ -33,4 +39,4 @@ def landing_page() -> FileResponse:
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-app.include_router(agents.router)
+app.include_router(api_v1_router)

@@ -250,6 +250,7 @@
       align-items: center;
       gap: 0.6rem;
       margin-bottom: 0.5rem;
+      min-width: 0;
     }
 
     .agent-name {
@@ -257,6 +258,9 @@
       font-family: "Space Grotesk", sans-serif;
       font-size: 1.15rem;
       line-height: 1.2;
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow-wrap: anywhere;
     }
 
     .score-pill {
@@ -268,6 +272,7 @@
       font-size: 0.8rem;
       font-weight: 700;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .skills {
@@ -355,6 +360,12 @@
         grid-template-columns: 1fr;
       }
     }
+
+    @media (min-width: 1180px) {
+      .agent-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
   </style>
 </head>
 <body>
@@ -374,7 +385,7 @@
       </div>
 
       <form class="controls" id="apiKeyForm">
-        <label for="apiKeyInput">API Key (for /agents/search)</label>
+        <label for="apiKeyInput">API Key (for /api/v1/agents/search)</label>
         <input id="apiKeyInput" name="apiKeyInput" type="password" autocomplete="off" placeholder="Enter X-API-Key value" />
         <button class="button button-ghost" type="submit">Save Key</button>
       </form>
@@ -393,15 +404,15 @@
     </main>
 
     <footer>
-      Built for machine-to-machine collaboration. Data source: <code>/agents/search?skill=all</code>.
+      Built for machine-to-machine collaboration. Data source: <code>/api/v1/agents/search?skill=all</code>.
     </footer>
   </div>
 
   <script>
     const API_KEY_STORAGE = "agenthub_api_key";
     const DEFAULT_API_KEY = "dev-secret-key";
-    const SEARCH_URL = "/agents/search?skill=all";
-    const FALLBACK_URL = "/agents/search";
+    const SEARCH_URL = "/api/v1/agents/search?skill=all";
+    const FALLBACK_URL = "/api/v1/agents/search";
 
     const agentGrid = document.getElementById("agentGrid");
     const statusBox = document.getElementById("statusBox");

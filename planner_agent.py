@@ -4,26 +4,27 @@ from typing import Any
 import requests
 
 AGENTHUB_URL = os.getenv("AGENTHUB_URL", "http://127.0.0.1:8000")
+API_PREFIX = "/api/v1"
 AGENTHUB_API_KEY = os.getenv("AGENTHUB_API_KEY", "dev-secret-key")
 HEADERS = {"X-API-Key": AGENTHUB_API_KEY}
 
 
 def register_agent(agent: dict[str, Any]) -> dict[str, Any]:
-    response = requests.post(f"{AGENTHUB_URL}/agents/register", json=agent, headers=HEADERS, timeout=10)
+    response = requests.post(f"{AGENTHUB_URL}{API_PREFIX}/agents/register", json=agent, headers=HEADERS, timeout=10)
     response.raise_for_status()
     return response.json()
 
 
 def search_agent(skill: str, max_price: float = 0.1, min_score: float = 0.0) -> list[dict[str, Any]]:
     params = {"skill": skill, "max_price": max_price, "min_score": min_score}
-    response = requests.get(f"{AGENTHUB_URL}/agents/search", params=params, headers=HEADERS, timeout=10)
+    response = requests.get(f"{AGENTHUB_URL}{API_PREFIX}/agents/search", params=params, headers=HEADERS, timeout=10)
     response.raise_for_status()
     return response.json()
 
 
 def call_agent(agent_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     response = requests.post(
-        f"{AGENTHUB_URL}/agents/call",
+        f"{AGENTHUB_URL}{API_PREFIX}/agents/call",
         json={"agent_id": agent_id, "payload": payload},
         headers=HEADERS,
         timeout=15,
@@ -96,4 +97,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

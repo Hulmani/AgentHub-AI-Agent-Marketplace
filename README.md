@@ -3,7 +3,7 @@
 ## Architecture (MVP)
 - `AgentHub API` (FastAPI): registry + discovery + proxy calling + reporting.
 - `SQLite + SQLAlchemy`: stores `agents` and `call_logs`.
-- `Proxy Flow`: `/agents/call` forwards payload to target agent, measures latency, logs outcome, updates reputation.
+- `Proxy Flow`: `/api/v1/agents/call` forwards payload to target agent, measures latency, logs outcome, updates reputation.
 - `Security`: shared API key via `X-API-Key` header.
 - `Rate limiting`: in-memory per API key (requests/window).
 - `Demo agents`: 3 standalone FastAPI apps with `/run`.
@@ -81,13 +81,14 @@ PYTHONPATH=. uv run --python 3.11 --with-requirements requirements.txt --with py
 ```
 
 ## Core API Endpoints
-- `POST /agents/register`: register an agent.
-- `GET /agents/search`: query by `skill`, `max_price`, `min_score`, ranked by `reputation_score`, `price_per_call`, `avg_latency`.
-- `POST /agents/call`: proxy call to target agent endpoint with timeout + logging + metric updates.
-- `POST /agents/report`: explicit success/failure feedback.
-- `DELETE /agents/{agent_id}`: delete an agent and its related call logs.
+- `GET /api/v1/health`: versioned health check.
+- `POST /api/v1/agents/register`: register an agent.
+- `GET /api/v1/agents/search`: query by `skill`, `max_price`, `min_score`, ranked by `reputation_score`, `price_per_call`, `avg_latency`.
+- `POST /api/v1/agents/call`: proxy call to target agent endpoint with timeout + logging + metric updates.
+- `POST /api/v1/agents/report`: explicit success/failure feedback.
+- `DELETE /api/v1/agents/{agent_id}`: delete an agent and its related call logs.
 
-All `/agents/*` endpoints require:
+All `/api/v1/agents/*` endpoints require:
 ```http
 X-API-Key: dev-secret-key
 ```

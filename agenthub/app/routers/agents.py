@@ -46,12 +46,15 @@ def search_agents(
     skill: str | None = Query(default=None),
     max_price: float | None = Query(default=None, ge=0),
     min_score: float | None = Query(default=None, ge=0, le=1),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ) -> list[Agent]:
     agents = list(db.execute(select(Agent)).scalars().all())
+    requested_skill = skill.strip() if skill else None
 
-    if skill:
-        agents = [agent for agent in agents if skill in (agent.skills or [])]
+    if requested_skill and requested_skill.lower() != "all":
+        agents = [agent for agent in agents if requested_skill in (agent.skills or [])]
     if max_price is not None:
         agents = [agent for agent in agents if agent.price_per_call <= max_price]
     if min_score is not None:
@@ -67,7 +70,7 @@ def search_agents(
             latency_sort_value(agent),
         )
     )
-    return agents
+    return agents[offset : offset + limit]
 
 
 @router.post("/call", response_model=CallAgentResponse)
