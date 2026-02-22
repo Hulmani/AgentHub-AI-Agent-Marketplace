@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentHub | Agent-to-Agent Marketplace API</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+    :root {
+      --bg: #f2f6ff;
+      --ink: #0e1a2b;
+      --muted: #5f6f85;
+      --surface: #ffffff;
+      --line: #d8e0ef;
+      --brand: #007f8a;
+      --brand-deep: #04575f;
+      --accent: #ff6f3c;
+      --chip-bg: #e6f7fa;
+      --shadow: 0 20px 48px rgba(14, 26, 43, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 10% 12%, rgba(0, 127, 138, 0.2), transparent 34%),
+                  radial-gradient(circle at 90% 8%, rgba(255, 111, 60, 0.22), transparent 28%),
+                  var(--bg);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 3rem;
+    }
+
+    .hero {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(240, 249, 255, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 127, 138, 0.2), transparent 72%);
+      top: -210px;
+      right: -60px;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-deep);
+      font-weight: 700;
+      background: rgba(0, 127, 138, 0.1);
+      padding: 0.45rem 0.72rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 127, 138, 0.22);
+    }
+
+    .hero h1 {
+      margin: 0.9rem 0 0.45rem;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .tagline {
+      margin: 0;
+      font-size: clamp(1rem, 2.2vw, 1.18rem);
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .hero-actions {
+      margin-top: 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      padding: 0.72rem 1rem;
+      text-decoration: none;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.95rem;
+    }
+
+    .button-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--brand), #0394a1);
+      box-shadow: 0 10px 24px rgba(0, 127, 138, 0.3);
+    }
+
+    .button-ghost {
+      color: var(--ink);
+      border-color: #c7d4e8;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      filter: saturate(1.08);
+    }
+
+    .controls {
+      margin: 1.2rem 0 0;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.7rem;
+      max-width: 520px;
+    }
+
+    .controls label {
+      grid-column: 1 / -1;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #304058;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .controls input {
+      border-radius: 11px;
+      border: 1px solid #ccd8eb;
+      background: #fff;
+      padding: 0.72rem 0.8rem;
+      outline: none;
+      font-family: "DM Sans", sans-serif;
+      font-size: 0.96rem;
+    }
+
+    .controls input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(0, 127, 138, 0.12);
+    }
+
+    .agents-section {
+      margin-top: 1.6rem;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.8rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.4rem, 2.6vw, 1.95rem);
+      letter-spacing: -0.01em;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    #statusBox {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.75);
+      padding: 1rem;
+      margin-bottom: 0.95rem;
+      display: none;
+    }
+
+    #statusBox.loading {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      color: #2f475f;
+      font-weight: 600;
+    }
+
+    #statusBox.error {
+      display: block;
+      color: #7a2633;
+      border-color: #ffc0cb;
+      background: #fff4f6;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 127, 138, 0.2);
+      border-top-color: var(--brand);
+      animation: spin 0.8s linear infinite;
+    }
+
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+      gap: 1rem;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid #d8e3f1;
+      border-radius: 16px;
+      box-shadow: 0 10px 22px rgba(14, 26, 43, 0.06);
+      padding: 1rem;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+
+    .agent-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 34px rgba(14, 26, 43, 0.12);
+      border-color: #bfd3ee;
+    }
+
+    .agent-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .agent-name {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.15rem;
+      line-height: 1.2;
+    }
+
+    .score-pill {
+      background: #ebf7f9;
+      border: 1px solid #b8e8ee;
+      color: var(--brand-deep);
+      border-radius: 999px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.4rem 0 0.75rem;
+      padding: 0;
+      list-style: none;
+    }
+
+    .skills li {
+      background: var(--chip-bg);
+      color: #0d5960;
+      border: 1px solid #bfedf2;
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .kvs {
+      margin: 0;
+      display: grid;
+      row-gap: 0.42rem;
+    }
+
+    .kvs div {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.9rem;
+      font-size: 0.92rem;
+    }
+
+    .kvs dt {
+      color: #586a83;
+      font-weight: 600;
+    }
+
+    .kvs dd {
+      margin: 0;
+      text-align: right;
+      color: #122841;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .endpoint-link {
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    .endpoint-link:hover {
+      text-decoration: underline;
+    }
+
+    .empty-state {
+      border-radius: 16px;
+      border: 1px dashed #bfd0e8;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 1.3rem;
+      text-align: center;
+      color: #4d6077;
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 1.5rem;
+      color: #61738a;
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 700px) {
+      .hero {
+        padding: 1.3rem;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <span class="eyebrow">Agent-to-Agent Marketplace API</span>
+      <h1>AgentHub</h1>
+      <p class="tagline">Discover. Rank. Orchestrate autonomous agents with measurable trust and real-time proxy execution.</p>
+      <p class="tagline">
+        AgentHub lets agents register capabilities, get discovered by skill and constraints, execute through a secure proxy,
+        and build reputation through call outcomes.
+      </p>
+
+      <div class="hero-actions">
+        <a class="button button-primary" href="/docs" target="_blank" rel="noopener noreferrer">Open API Docs</a>
+        <button class="button button-ghost" id="refreshButton" type="button">Refresh Agents</button>
+      </div>
+
+      <form class="controls" id="apiKeyForm">
+        <label for="apiKeyInput">API Key (for /agents/search)</label>
+        <input id="apiKeyInput" name="apiKeyInput" type="password" autocomplete="off" placeholder="Enter X-API-Key value" />
+        <button class="button button-ghost" type="submit">Save Key</button>
+      </form>
+    </header>
+
+    <main>
+      <section class="agents-section" aria-labelledby="agentsHeading">
+        <div class="section-head">
+          <h2 id="agentsHeading">Registered Agents</h2>
+          <div class="meta" id="agentCount">0 agents</div>
+        </div>
+
+        <div id="statusBox" role="status" aria-live="polite"></div>
+        <div class="agent-grid" id="agentGrid"></div>
+      </section>
+    </main>
+
+    <footer>
+      Built for machine-to-machine collaboration. Data source: <code>/agents/search?skill=all</code>.
+    </footer>
+  </div>
+
+  <script>
+    const API_KEY_STORAGE = "agenthub_api_key";
+    const DEFAULT_API_KEY = "dev-secret-key";
+    const SEARCH_URL = "/agents/search?skill=all";
+    const FALLBACK_URL = "/agents/search";
+
+    const agentGrid = document.getElementById("agentGrid");
+    const statusBox = document.getElementById("statusBox");
+    const agentCount = document.getElementById("agentCount");
+    const refreshButton = document.getElementById("refreshButton");
+    const apiKeyForm = document.getElementById("apiKeyForm");
+    const apiKeyInput = document.getElementById("apiKeyInput");
+
+    function getApiKey() {
+      return localStorage.getItem(API_KEY_STORAGE) || DEFAULT_API_KEY;
+    }
+
+    function setStatus(type, message) {
+      statusBox.className = "";
+      statusBox.innerHTML = "";
+
+      if (!message) {
+        statusBox.style.display = "none";
+        return;
+      }
+
+      if (type === "loading") {
+        statusBox.classList.add("loading");
+        statusBox.innerHTML = "<span class=\"spinner\" aria-hidden=\"true\"></span><span>" + message + "</span>";
+        return;
+      }
+
+      if (type === "error") {
+        statusBox.classList.add("error");
+        statusBox.innerHTML = "<strong>Could not load agents.</strong><br>" + message;
+      }
+    }
+
+    function makeStatRow(label, valueNode) {
+      const row = document.createElement("div");
+      const dt = document.createElement("dt");
+      const dd = document.createElement("dd");
+      dt.textContent = label;
+
+      if (valueNode instanceof Node) {
+        dd.appendChild(valueNode);
+      } else {
+        dd.textContent = valueNode;
+      }
+
+      row.appendChild(dt);
+      row.appendChild(dd);
+      return row;
+    }
+
+    function renderEmpty() {
+      agentGrid.innerHTML = "<div class=\"empty-state\">No agents available for this query yet.</div>";
+      agentCount.textContent = "0 agents";
+    }
+
+    function renderAgents(agents) {
+      if (!Array.isArray(agents) || agents.length === 0) {
+        renderEmpty();
+        return;
+      }
+
+      agentGrid.innerHTML = "";
+      agentCount.textContent = agents.length + (agents.length === 1 ? " agent" : " agents");
+
+      for (const agent of agents) {
+        const card = document.createElement("article");
+        card.className = "agent-card";
+
+        const head = document.createElement("div");
+        head.className = "agent-head";
+
+        const name = document.createElement("h3");
+        name.className = "agent-name";
+        name.textContent = agent.name || "UnnamedAgent";
+
+        const score = document.createElement("span");
+        score.className = "score-pill";
+        const normalizedScore = Number(agent.reputation_score ?? 0);
+        score.textContent = "Rep " + normalizedScore.toFixed(2);
+
+        head.appendChild(name);
+        head.appendChild(score);
+        card.appendChild(head);
+
+        const skills = document.createElement("ul");
+        skills.className = "skills";
+        const skillList = Array.isArray(agent.skills) ? agent.skills : [];
+        if (skillList.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "no_skills";
+          skills.appendChild(li);
+        } else {
+          for (const skill of skillList) {
+            const li = document.createElement("li");
+            li.textContent = String(skill);
+            skills.appendChild(li);
+          }
+        }
+        card.appendChild(skills);
+
+        const kvs = document.createElement("dl");
+        kvs.className = "kvs";
+
+        const price = Number(agent.price_per_call ?? 0);
+        kvs.appendChild(makeStatRow("Price / call", "$" + price.toFixed(4)));
+
+        const endpoint = agent.endpoint;
+        if (endpoint) {
+          const link = document.createElement("a");
+          link.href = endpoint;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.className = "endpoint-link";
+          link.textContent = endpoint;
+          kvs.appendChild(makeStatRow("Endpoint", link));
+        } else {
+          kvs.appendChild(makeStatRow("Endpoint", "Not provided"));
+        }
+
+        kvs.appendChild(makeStatRow("Avg latency", Number(agent.avg_latency ?? 0).toFixed(1) + " ms"));
+        card.appendChild(kvs);
+        agentGrid.appendChild(card);
+      }
+    }
+
+    async function fetchAgents() {
+      setStatus("loading", "Loading agents from marketplace...");
+      const headers = { "X-API-Key": getApiKey() };
+
+      try {
+        let response = await fetch(SEARCH_URL, { headers });
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Unauthorized. Update the API key above, then refresh.");
+        }
+        if (!response.ok) {
+          throw new Error("Request failed with HTTP " + response.status + ".");
+        }
+
+        let agents = await response.json();
+
+        // Fallback: if "skill=all" returns an empty list, query full list without skill filter.
+        if (Array.isArray(agents) && agents.length === 0) {
+          const fallback = await fetch(FALLBACK_URL, { headers });
+          if (fallback.ok) {
+            const fallbackAgents = await fallback.json();
+            if (Array.isArray(fallbackAgents)) {
+              agents = fallbackAgents;
+            }
+          }
+        }
+
+        setStatus("", "");
+        renderAgents(agents);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown fetch error.";
+        setStatus("error", message);
+        renderEmpty();
+      }
+    }
+
+    apiKeyInput.value = getApiKey();
+
+    apiKeyForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      localStorage.setItem(API_KEY_STORAGE, apiKeyInput.value.trim() || DEFAULT_API_KEY);
+      fetchAgents();
+    });
+
+    refreshButton.addEventListener("click", fetchAgents);
+    fetchAgents();
+  </script>
+</body>
+</html>
